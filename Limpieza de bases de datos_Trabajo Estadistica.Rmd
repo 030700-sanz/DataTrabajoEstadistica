@@ -1,0 +1,110 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+plot(cars)
+```
+
+```{r}
+####Indice de Percepcion de Corrupcion - 2016
+
+library(rio)
+cpi2016="https://github.com/030700-sanz/CPI2016-2018/raw/master/CPI2016_FullDataSetWithRegionalTables_200409_135127.xlsx"
+CPI2016=import(cpi2016)
+
+
+##CPI2016
+names(CPI2016)
+CPI2016=CPI2016[,-c(3:33)]
+names(CPI2016)
+#Cambiar nombres
+names(CPI2016)[1]="Pais"
+names(CPI2016)[2]="CPI2016"
+```
+
+```{r}
+####Refugiados por pais 2016
+
+library(rio)
+ref1="https://github.com/030700-sanz/RefugiadosData/raw/master/2016_population1.xlsx"
+Refugiados2016=import(ref1)
+
+names(Refugiados2016)[1]="np"
+Refugiados2016$var1 = Refugiados2016$np
+Refugiados2016$var2 = Refugiados2016$np
+library(stringr)
+library(readr) 
+Refugiados2016$var1 = str_split(string = Refugiados2016$var1,
+                         pattern = ',',
+                         simplify = T)[,2]
+
+Refugiados2016$var2 = str_split(string = Refugiados2016$var2,
+                         pattern = '-',
+                         simplify = T)[,3]
+
+
+Refugiados2016$var2 = parse_number(Refugiados2016$var2)
+#ELIMINAR COLUMNAS
+Refugiados2016=Refugiados2016[,-c(1)]
+Refugiados2016=Refugiados2016[-c(186,61,165),]
+
+#Cambiar nombres
+names(Refugiados2016)[1]="Pais"
+names(Refugiados2016)[2]="Refugiados2016"
+
+#Limpiar
+  Refugiados2016$Pais=gsub('"', "", Refugiados2016$Pais) 
+  Refugiados2016$Pais = str_split(string = Refugiados2016$Pais,
+                         pattern = "\\(",
+                         simplify = T)[,1]
+#Corregimos un nombre
+  Refugiados2016[c(139),]=c("Serbia","36928")
+```
+
+Hacemos merge
+```{r}
+CPIRef=merge(CPI2016,Refugiados2016,all.x = T,all.y = T)
+```
+
+Cambiamos nombres y limpieza de data
+```{r}
+cambios = CPIRef
+
+cambios[c(20),]=c("Bolivia","33","530")
+cambios[c(29),]=c("Cape Verde","59","19")
+cambios[c(35),]=c("Central African Republic", "20","490879")
+cambios[c(52),]=c("Czech Republic","55","1266")
+cambios[c(59),]=c("Dominican Republic","31","359")
+cambios[c(90),]=c("Iran","29","94103")
+cambios[c(54),]=c("South Korea","53","243")
+cambios[c(106),]=c("Laos","30","7229")
+cambios[c(153),]=c("South Korea","12","1419")
+cambios[c(157),]=c("Russia","29","62759")
+cambios[c(167),]=c("Serbia","40","36928")
+cambios[c(185),]=c("Syria","13","5524511")
+cambios[c(206),]=c("United Kingdom","81","78")
+cambios[c(193),]=c("The United States of America","74","302")
+cambios[c(212),]=c("Venezuela","17","7543")
+cambios[c(214),]=c("Vietnam","33","329341")
+cambios[c(55),]=c("The Democratic Republic of Congo","21","537474")
+cambios[c(44),]=c("Republic of Congo","20","13291")
+
+
+
+#Eliminar filas
+cambios=cambios[-c(5,9,17,34,50,51,64,67,69,21,33,36,74,53,60,154,159,180,163,162,169,81,82,93,114,120,121,125,126,139,140,144,186,207,209,213,202,197,208,187,189,194,195,215,191,155,216,91,102,107,101,158,168,46,47,25,56,85,87,103,192,160),]
+                   
+CPIRef=cambios
+cambios= NULL
+
+#Por ultimo, cambiamos las variables numericas
+CPIRef$CPI2016=as.numeric(CPIRef$CPI2016)
+CPIRef$Refugiados2016=as.numeric(CPIRef$Refugiados2016)
+```
+
